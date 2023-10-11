@@ -5,6 +5,7 @@ const api = supertest(app);
 const User = require("../models/user");
 const Blog = require("../models/blog");
 const helper = require("./test_helper");
+const bcrypt = require("bcrypt");
 
 const initialBlogs = [
   {
@@ -220,6 +221,52 @@ describe("when there is initially one user at db", () => {
     const usersAtEnd = await helper.usersInDb();
     expect(usersAtEnd).toHaveLength(usersAtStart.length);
   });
+});
+
+test("creation fails with proper statuscode and message if username is too short", async () => {
+  const usersAtStart = await helper.usersInDb();
+
+  const newUser = {
+    username: "aa",
+    name: "Matti Luukkainen",
+    password: "salainen",
+  };
+
+  const result = await api
+    .post("/api/users")
+    .send(newUser)
+    .expect(400)
+    .expect("Content-Type", /application\/json/);
+
+  expect(result.body.error).toContain(
+    "käyttäjätunnuksen sekä salasanan tulee olla olemassa ja vähintään 3 merkkiä pitkiä"
+  );
+
+  const usersAtEnd = await helper.usersInDb();
+  expect(usersAtEnd).toHaveLength(usersAtStart.length);
+});
+
+test("creation fails with proper statuscode and message if password is too short", async () => {
+  const usersAtStart = await helper.usersInDb();
+
+  const newUser = {
+    username: "mluukkai",
+    name: "Matti Luukkainen",
+    password: "aa",
+  };
+
+  const result = await api
+    .post("/api/users")
+    .send(newUser)
+    .expect(400)
+    .expect("Content-Type", /application\/json/);
+
+  expect(result.body.error).toContain(
+    "käyttäjätunnuksen sekä salasanan tulee olla olemassa ja vähintään 3 merkkiä pitkiä"
+  );
+
+  const usersAtEnd = await helper.usersInDb();
+  expect(usersAtEnd).toHaveLength(usersAtStart.length);
 });
 
 afterAll(() => {
