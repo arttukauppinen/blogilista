@@ -31,7 +31,10 @@ usersRouter.post("/", async (request, response, next) => {
 
 usersRouter.get("/", async (request, response) => {
   const users = await User.find({});
-  response.json(users);
+  console.log("Before populate:", users);
+  const populatedUsers = await User.find({}).populate("blogs");
+  console.log("After populate:", populatedUsers);
+  response.json(populatedUsers);
 });
 
 module.exports = usersRouter;
